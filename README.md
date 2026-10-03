@@ -7,7 +7,7 @@
 | 课程 | [H202601 软件工程与软件工程实践](https://edu.cnblogs.com/campus/fzu/2026-01SoftwareEngineeringandSoftwareEngineeringPractice/) |
 | 作业要求 | [2026秋软件工程结对作业（第二次之程序实现）](https://edu.cnblogs.com/campus/fzu/2026-01SoftwareEngineeringandSoftwareEngineeringPractice/homework/16745) |
 | 结对成员 | 102401231 赵紫龙（[zzl3141](https://github.com/zzl3141)）、102401228 林彦翔 |
-| 第一次结对作业 | [校园失物招领小程序需求分析与原型设计](https://www.cnblogs.com/zzl314/ ) |
+| 第一次结对作业 | [校园失物招领小程序需求分析与原型设计](https://www.cnblogs.com/zzl314/p/23127461) |
 | 截止时间 | 2026-10-10 23:59 |
 
 ## 一、项目简介
