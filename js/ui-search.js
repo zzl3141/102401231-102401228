@@ -1,38 +1,197 @@
 /*!
- * ui-search.js —— 搜索页（阶段 4 实现）
+ * ui-search.js —— 搜索页
  * 负责人：102401231 赵紫龙
  *
- * 阶段 4 要做：关键词匹配（名称 / 描述 / 地点）、全部 / 寻物 / 招领 筛选、无结果空状态。
- * 数据层的 LFModel.filterItems 与 LFModel.matchKeyword 已经可以直接调用。
+ * 包含：关键词搜索（名称 / 描述 / 地点）、只看寻物 / 只看招领、
+ *       骨架屏、加载失败与重试、无结果空状态、热门搜索。
+ *
+ * 两个约定：
+ *  1. 关键词只输空格 = 没输入：显示初始态，而不是把全部信息列出来。
+ *  2. 搜索结果默认只包含进行中的信息，已结束的不再打扰用户。
  */
 (function (root) {
   'use strict';
 
   var UI = root.LFUI = root.LFUI || {};
   var h = UI.h;
+  var M = root.LFModel;
+  var S = root.LFStore;
 
-  function render(ctx) {
-    var kw = (ctx && ctx.query && ctx.query.kw) || '';
+  var HOT = ['校园卡', '钥匙', '雨伞', '耳机', '课本'];
 
-    var body = '' +
-      '<div class="searchbox">' +
+  var state = { kw: '', type: 'all' };
+  var timer = null;
+
+  var TYPE_TABS = [
+    { value: 'all', label: '全部' },
+    { value: 'lost', label: '只看寻物' },
+    { value: 'found', label: '只看招领' }
+  ];
+
+  function shell() {
+    var typeSeg = TYPE_TABS.map(function (t) {
+      return '<span class="' + (t.value === state.type ? 'on' : '') + '" ' +
+        'data-sf="type" data-sv="' + h.esc(t.value) + '">' + h.esc(t.label) + '</span>';
+    }).join('');
+
+    return '' +
+      '<div class="searchbox search-head">' +
         '<span>\uD83D\uDD0D</span>' +
-        '<input id="kw" type="search" placeholder="搜索物品名称、地点" value="' + h.esc(kw) + '">' +
+        '<input id="kw" type="search" autocomplete="off" ' +
+          'placeholder="搜索物品名称、地点" value="' + h.esc(state.kw) + '">' +
+        '<span class="search-clear' + (state.kw ? '' : ' hide') + '" id="clearKw" title="清空">\u00d7</span>' +
       '</div>' +
-      '<div class="mt-12"></div>' +
-      h.stageNote('搜索将在阶段 4 实现', [
-        '负责人：102401231 赵紫龙',
-        '要把输入的关键词接到 LFModel.filterItems({ keyword: kw })',
-        '空关键词不展示结果，而是显示「还没开始搜索」的初始态'
-      ]) +
-      h.empty({
-        icon: '\uD83D\uDD0E',
-        title: '还没有开始搜索',
-        sub: '输入物品名称试试，例如「校园卡」「雨伞」'
-      });
-
-    h.host().innerHTML = h.screen({ title: '搜索', back: '/home' }, body);
+      '<div class="filter-bar">' +
+        '<div class="seg">' + typeSeg + '</div>' +
+      '</div>' +
+      '<div class="list-head"><span id="count"></span></div>' +
+      '<div id="list"></div>';
   }
 
-  UI.search = { render: render };
+  function render(ctx) {
+    var q = (ctx && ctx.query) || {};
+    state.kw = q.kw || '';
+    if (q.type) state.type = q.type;
+
+    h.host().innerHTML = h.screen({ title: '搜索', back: '/home' }, shell());
+    syncChips();
+    focusInput();
+    run(q.fail === '1');
+  }
+
+  function focusInput() {
+    var input = document.getElementById('kw');
+    if (!input) return;
+    try {
+      input.focus();
+      var n = input.value.length;
+      input.setSelectionRange(n, n);
+    } catch (e) { /* 某些环境下不支持，忽略即可 */ }
+  }
+
+  function syncChips() {
+    var chips = document.querySelectorAll('[data-sf]');
+    for (var i = 0; i < chips.length; i++) {
+      if (chips[i].getAttribute('data-sv') === state.type) chips[i].classList.add('on');
+      else chips[i].classList.remove('on');
+    }
+  }
+
+  function syncClear() {
+    var btn = document.getElementById('clearKw');
+    if (!btn) return;
+    if (state.kw) btn.classList.remove('hide');
+    else btn.classList.add('hide');
+  }
+
+  function initialState() {
+    return '' +
+      '<div class="card">' +
+        '<div class="hot-title">热门搜索</div>' +
+        '<div class="chips mt-12">' + HOT.map(function (k) {
+          return '<span class="chip" data-skw="' + h.esc(k) + '">' + h.esc(k) + '</span>';
+        }).join('') + '</div>' +
+        '<div class="item-meta">输入物品名称就能查，描述和地点里的字也能匹配到</div>' +
+      '</div>';
+  }
+
+  function run(forceFail) {
+    var kw = M.trim(state.kw);
+    var box = document.getElementById('list');
+    var count = document.getElementById('count');
+    if (!box) return;
+
+    if (M.isBlankKeyword(kw)) {
+      if (count) count.textContent = '';
+      box.innerHTML = initialState();
+      return;
+    }
+
+    box.innerHTML = h.skeletonList(2);
+    if (count) count.textContent = '搜索中…';
+
+    S.fetchItems({
+      keyword: kw,
+      type: state.type,
+      status: 'active',
+      __fail: !!forceFail
+    }, function (res) {
+      var box2 = document.getElementById('list');
+      if (!box2) return;
+      var count2 = document.getElementById('count');
+
+      if (!res.ok) {
+        if (count2) count2.textContent = '';
+        box2.innerHTML = h.loadFailed(res.error, 'search');
+        return;
+      }
+
+      if (count2) count2.textContent = '找到 ' + res.items.length + ' 条与「' + kw + '」相关的信息';
+
+      if (!res.items.length) {
+        box2.innerHTML = h.empty({
+          icon: '\uD83D\uDD0E',
+          title: '没有找到相关的信息',
+          sub: '换个关键词试试，比如只填物品名称',
+          actionText: '返回首页浏览',
+          actionNav: '/home'
+        });
+        return;
+      }
+
+      box2.innerHTML = res.items.map(function (it) { return h.itemCard(it); }).join('');
+    });
+  }
+
+  function scheduleRun() {
+    if (timer) root.clearTimeout(timer);
+    timer = root.setTimeout(function () { run(false); }, 250);
+  }
+
+  /* 输入时只重画结果区，不重画整个页面，否则输入框会失去焦点 */
+  document.addEventListener('input', function (e) {
+    if (!e.target || e.target.id !== 'kw') return;
+    state.kw = e.target.value;
+    syncClear();
+    scheduleRun();
+  });
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+
+    var hot = t.closest('[data-skw]');
+    if (hot) {
+      state.kw = hot.getAttribute('data-skw');
+      var input = document.getElementById('kw');
+      if (input) input.value = state.kw;
+      syncClear();
+      run(false);
+      return;
+    }
+
+    var chip = t.closest('[data-sf]');
+    if (chip) {
+      state.type = chip.getAttribute('data-sv');
+      syncChips();
+      run(false);
+      return;
+    }
+
+    if (t.closest('#clearKw')) {
+      state.kw = '';
+      var inp = document.getElementById('kw');
+      if (inp) {
+        inp.value = '';
+        inp.focus();
+      }
+      syncClear();
+      run(false);
+      return;
+    }
+
+    if (t.closest('[data-retry="search"]')) run(false);
+  });
+
+  UI.search = { render: render, state: state };
 })(window);
