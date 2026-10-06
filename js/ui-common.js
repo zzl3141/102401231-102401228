@@ -71,6 +71,24 @@
       '</div>';
   }
 
+  /** 连续 n 张骨架屏卡片 */
+  function skeletonList(n) {
+    var out = '';
+    for (var i = 0; i < (n || 3); i++) out += skeletonCard();
+    return out;
+  }
+
+  /** 加载失败 + 重试。scope 决定重试按钮交给哪个页面处理 */
+  function loadFailed(message, scope) {
+    return '' +
+      '<div class="empty">' +
+        '<div class="empty-i">\u26A0\uFE0F</div>' +
+        '<div class="empty-t">加载失败</div>' +
+        '<div class="empty-s">' + esc(message || '请稍后重试') + '</div>' +
+        '<button class="btn btn-primary" data-retry="' + esc(scope || '') + '">重新加载</button>' +
+      '</div>';
+  }
+
   /** 信息卡片：首页与搜索结果共用，保证两处展示一致 */
   function itemCard(item, opts) {
     var M = root.LFModel;
@@ -130,6 +148,8 @@
     screen: screen,
     empty: empty,
     skeletonCard: skeletonCard,
+    skeletonList: skeletonList,
+    loadFailed: loadFailed,
     itemCard: itemCard,
     stageNote: stageNote,
     toast: toast

@@ -229,12 +229,45 @@
     return readItems();
   }
 
+  /* ---------------- 异步读取外壳 ----------------
+     数据现在来自 localStorage（同步），这里把它包装成异步读取，
+     目的是让「加载中 / 加载失败 / 重试」这三条状态真实存在
+     （走查清单第 W 项里要过一遍），而不是只在设计稿上画出来。
+     以后接真实后台，只需要改这一个函数，页面不用动。
+
+     走查用开关：路由上带 ?fail=1 可以强制让本次读取失败，
+     用来看加载失败与重试长什么样，例如 #/home?fail=1、#/search?kw=雨伞&fail=1 */
+  var LOAD_DELAY = 220;
+
+  function fetchItems(queryObj, onDone) {
+    var q = {};
+    for (var k in (queryObj || {})) {
+      if (Object.prototype.hasOwnProperty.call(queryObj, k)) q[k] = queryObj[k];
+    }
+    var forced = q.__fail === true;
+    delete q.__fail;
+
+    root.setTimeout(function () {
+      if (forced) {
+        onDone({ ok: false, error: '网络开了个小差（走查演示）' });
+        return;
+      }
+      try {
+        onDone({ ok: true, items: M.filterItems(readItems(), q) });
+      } catch (e) {
+        onDone({ ok: false, error: (e && e.message) || '读取失败' });
+      }
+    }, LOAD_DELAY);
+  }
+
   root.LFStore = {
     KEY_ITEMS: KEY_ITEMS,
     KEY_MINE: KEY_MINE,
+    LOAD_DELAY: LOAD_DELAY,
     all: all,
     get: get,
     query: query,
+    fetchItems: fetchItems,
     mine: mine,
     myIds: myIds,
     isMine: isMine,
