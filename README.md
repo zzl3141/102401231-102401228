@@ -37,10 +37,22 @@
 │  ├─ model.js           # 纯函数：校验 / 筛选 / 状态流转（单元测试对象）
 │  ├─ store.js           # localStorage 读写 + 内置示例数据
 │  ├─ router.js          # hash 路由（#/home #/search #/publish #/detail/:id #/mine）
-│  └─ ui-*.js            # 各页面渲染与交互
+│  ├─ ui-common.js       # 各页面共用的渲染小工具（顶部栏、卡片、空状态、提示）
+│  ├─ ui-home.js         # 首页
+│  ├─ ui-search.js       # 搜索页
+│  ├─ ui-detail.js       # 信息详情页
+│  ├─ ui-publish.js      # 发布页
+│  ├─ ui-mine.js         # 我的发布
+│  └─ app.js             # 启动入口：注册路由、同步底部导航、统一接管 data-nav 点击
 ├─ img/                  # 物品图片素材
 └─ tests/                # 单元测试（按作业说明不上传，已在 .gitignore 中忽略）
 ```
+
+页面路由：`#/home`、`#/search`、`#/publish`、`#/detail/:id`、`#/mine`
+
+> 全部使用普通 `<script>` 标签而不是 ES Module：助教是直接双击 `index.html`
+> 用 `file://` 打开的，ES Module 会被同源策略拦下。加载顺序也不能改：
+> `model → store → router → ui-common → ui-* → app`。
 
 ## 四、使用说明
 

@@ -1,0 +1,168 @@
+/* base.css —— 变量、重置、手机画布、顶部栏与底部导航
+   负责人：102401231 赵紫龙
+   配色沿用第一次结对作业的原型（主色 #2E63E7）。 */
+
+:root {
+  --brand: #2E63E7;
+  --brand-dark: #1F4FD0;
+  --brand-mid: #5B8DEF;
+  --brand-light: #E4ECFF;
+  --brand-line: #C9D9FF;
+
+  --ink: #111827;
+  --ink-2: #3F4757;
+  --ink-3: #5B6472;
+  --gray: #6B7280;
+  --muted: #8B93A1;
+  --muted-2: #9AA3AF;
+
+  --line: #E9EDF4;
+  --line-2: #EDF0F5;
+  --bg: #F2F4F8;
+  --bg-2: #EEF1F6;
+  --card: #FFFFFF;
+
+  --danger: #E5484D;
+  --danger-bg: #FDECEC;
+  --ok: #12A150;
+  --ok-bg: #E8F7EE;
+
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 18px;
+  --shadow: 0 2px 8px rgba(17, 24, 39, .06);
+  --shadow-lg: 0 10px 28px rgba(17, 24, 39, .10);
+
+  --app-w: 430px;
+  --header-h: 56px;
+  --tabbar-h: 58px;
+
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+          "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg-2);
+}
+
+a { color: var(--brand); text-decoration: none; }
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+img { max-width: 100%; display: block; }
+
+h1, h2, h3, p, ul, ol { margin: 0; }
+ul, ol { padding-left: 1.2em; }
+
+/* ---------- 手机画布 ----------
+   移动优先：手机上一屏铺满，PC 上居中为一条 430px 的画布并留白，
+   这样助教用 Chrome 打开看到的仍然是原型里的手机界面。 */
+.app {
+  position: relative;
+  width: 100%;
+  max-width: var(--app-w);
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--card);
+  padding-bottom: var(--tabbar-h);
+  overflow-x: hidden;
+}
+
+@media (min-width: 480px) {
+  body { background: #E7EAF1; }
+  .app { box-shadow: var(--shadow-lg); }
+}
+
+.screen {
+  min-height: calc(100vh - var(--tabbar-h));
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- 顶部栏 ---------- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--header-h);
+  padding: 10px 14px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line-2);
+}
+
+.app-header .h-title { font-size: 17px; font-weight: 600; color: var(--ink); }
+.app-header .h-sub { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+.nav-back {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink-2);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.nav-back:hover { background: var(--bg-2); }
+
+.app-body { flex: 1 1 auto; padding: 12px 14px 20px; }
+
+/* ---------- 底部导航 ---------- */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  width: 100%;
+  max-width: var(--app-w);
+  height: var(--tabbar-h);
+  background: rgba(255, 255, 255, .96);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+}
+
+.tab {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.tab .tab-i { font-size: 17px; line-height: 1; }
+.tab.on { color: var(--brand); font-weight: 600; }
+
+/* ---------- 通用工具 ---------- */
+.hide { display: none !important; }
+.muted { color: var(--muted); }
+.center { text-align: center; }
+.row { display: flex; align-items: center; gap: 8px; }
+.grow { flex: 1 1 auto; min-width: 0; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mt-12 { margin-top: 12px; }
+.fw-6 { font-weight: 600; }

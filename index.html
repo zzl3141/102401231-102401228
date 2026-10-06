@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="校园失物招领 —— 发布寻物与招领信息，集中浏览与搜索，物品找回或归还后由发布者更新状态。">
+<title>校园失物招领</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<div class="app">
+  <main class="screen" id="screen"></main>
+
+  <nav class="tabbar" id="tabbar">
+    <a class="tab" data-tab="/home" href="#/home">
+      <span class="tab-i">🏠</span><span class="tab-t">首页</span>
+    </a>
+    <a class="tab" data-tab="/publish" href="#/publish">
+      <span class="tab-i">＋</span><span class="tab-t">发布</span>
+    </a>
+    <a class="tab" data-tab="/mine" href="#/mine">
+      <span class="tab-i">☰</span><span class="tab-t">我的</span>
+    </a>
+  </nav>
+</div>
+
+<noscript>
+  <p style="padding:16px;font:14px/1.6 sans-serif">本页面需要启用 JavaScript 才能运行。</p>
+</noscript>
+
+<!--
+  说明：全部使用普通 script 标签，不使用 ES Module。
+  原因是助教直接把 index.html 双击用 Chrome 打开（file:// 协议），
+  ES Module 会被浏览器的同源策略拦住，普通 script 不会。
+  加载顺序不能改：model -> store -> router -> ui-common -> ui-* -> app
+-->
+<script src="js/model.js"></script>
+<script src="js/store.js"></script>
+<script src="js/router.js"></script>
+<script src="js/ui-common.js"></script>
+<script src="js/ui-home.js"></script>
+<script src="js/ui-search.js"></script>
+<script src="js/ui-detail.js"></script>
+<script src="js/ui-publish.js"></script>
+<script src="js/ui-mine.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
