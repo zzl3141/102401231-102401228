@@ -82,6 +82,7 @@
 | 首页加载失败 | `index.html#/home?fail=1` |
 | 搜索结果加载失败 | `index.html#/search?kw=雨伞&fail=1` |
 | 详情页加载失败 | `index.html#/detail/itm_seed_1?fail=1` |
+| 恢复成内置示例数据 | `index.html#/home?reset=1` |
 
 点界面上的「重新加载」按钮即可恢复成正常数据。
 

@@ -62,6 +62,18 @@
   }
 
   function boot() {
+    /* 走查 / 演示用开关：#/home?reset=1 会把数据恢复成内置示例数据。
+       助教复现出问题或者想从干净的初始状态重新看一遍时用得上。 */
+    var q = Router.parse(root.location.hash).query;
+    if (q.reset === '1') {
+      Store.reset();
+      /* 把地址收拾回 #/home。个别浏览器在 file:// 下不允许多次改地址，
+         改不动也没关系：reset 参数对页面没有别的影响。 */
+      try {
+        root.history.replaceState(null, '', '#/home');
+      } catch (e) { /* 忽略 */ }
+    }
+
     Store.seedIfEmpty();
     registerRoutes();
     Router.afterRender(syncTab);
