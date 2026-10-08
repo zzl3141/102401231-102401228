@@ -1,9 +1,6 @@
 # 依赖
 node_modules/
 
-# 单元测试（按作业说明：单元测试不必上传）
-tests/
-
 # 系统与编辑器
 .DS_Store
 Thumbs.db

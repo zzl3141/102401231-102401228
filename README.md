@@ -45,7 +45,10 @@
 │  ├─ ui-mine.js         # 我的发布
 │  └─ app.js             # 启动入口：注册路由、同步底部导航、统一接管 data-nav 点击
 ├─ img/                  # 物品图片素材
-└─ tests/                # 单元测试（按作业说明不上传，已在 .gitignore 中忽略）
+├─ tests/                # 单元测试（node:test，零依赖）
+│  ├─ model.test.js      # 数据层纯函数的用例
+│  └─ store.test.js      # 存取层与状态流转的用例
+└─ package.json          # 只用于 npm test，跑网页本身不需要它
 ```
 
 页面路由：`#/home`、`#/search`、`#/publish`、`#/detail/:id`、`#/mine`
@@ -59,6 +62,14 @@
 1. 下载或克隆本仓库到本地。
 2. 用 **Chrome 浏览器**双击打开根目录的 `index.html`。
 3. 无需安装依赖、无需启动本地服务器、无需联网。
+
+（可选）想跑单元测试的话，需要本机有 Node.js 18 以上：
+
+```
+npm test
+```
+
+不需要 `npm install`——测试用的是 Node 自带的 `node:test`，没有任何第三方依赖。
 
 > 建议统一使用谷歌浏览器，避免不同浏览器下页面效果不一致。
 

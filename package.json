@@ -1,0 +1,12 @@
+{
+  "name": "campus-lost-and-found",
+  "version": "1.0.0",
+  "private": true,
+  "description": "校园失物招领 WEB 程序（2026秋软件工程结对作业第二次）。注意：运行网页本身不需要 npm，双击 index.html 即可；package.json 只用来跑单元测试。",
+  "scripts": {
+    "test": "node tests/model.test.js && node tests/store.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
