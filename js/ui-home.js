@@ -65,9 +65,13 @@
 
   function render(ctx) {
     var q = (ctx && ctx.query) || {};
-    if (q.type) state.type = q.type;
-    if (q.category) state.category = q.category;
-    if (q.status) state.status = q.status;
+    /* 每次「进入」首页都回到默认视图（全部 / 全部类别 / 进行中）。
+       页面内的筛选切换走 paint()，不经过这里，所以点了筛选不会被重置。
+       这样做是为了避免：用户在上次停留的「已结束」筛选下回到首页，
+       看不到自己刚发布的信息。URL 上带参数时以参数为准（方便分享与走查）。 */
+    state.type = q.type || 'all';
+    state.category = q.category || 'all';
+    state.status = q.status || 'active';
     paint(q.fail === '1');
   }
 
