@@ -17,7 +17,7 @@
   var S = root.LFStore;
 
   /* 页面筛选状态放在模块里：切换分类不重新走路由，列表不会闪一下 */
-  var state = { type: 'all', category: 'all', status: 'active' };
+  var state = { type: 'all', category: 'all', place: 'all', status: 'active' };
 
   var TYPE_TABS = [
     { value: 'all', label: '全部' },
@@ -36,11 +36,20 @@
         'data-hf="type" data-hv="' + h.esc(t.value) + '">' + h.esc(t.label) + '</span>';
     }).join('');
 
-    var catChips = [{ value: 'all', label: '全部类别' }]
+    var catChips = [{ value: 'all', label: '全部' }]
       .concat(M.CATEGORIES.map(function (c) { return { value: c, label: c }; }))
       .map(function (it) {
         return '<span class="chip' + (it.value === state.category ? ' on' : '') + '" ' +
           'data-hf="category" data-hv="' + h.esc(it.value) + '">' + h.esc(it.label) + '</span>';
+      }).join('');
+
+    /* 地点标签只列出当前数据里真的出现过的地点，避免点进去一条都没有 */
+    var placeTags = M.placeTagsOf(S.all());
+    var placeChips = [{ value: 'all', label: '全部' }]
+      .concat(placeTags.map(function (t) { return { value: t, label: t }; }))
+      .map(function (it) {
+        return '<span class="chip' + (it.value === state.place ? ' on' : '') + '" ' +
+          'data-hf="place" data-hv="' + h.esc(it.value) + '">' + h.esc(it.label) + '</span>';
       }).join('');
 
     var statusChips = STATUS_TABS.map(function (t) {
@@ -54,7 +63,10 @@
       '</div>' +
       '<div class="filter-bar">' +
         '<div class="seg">' + typeSeg + '</div>' +
-        '<div class="chips">' + catChips + '</div>' +
+        '<div class="filter-line"><span class="fl-k">类别</span>' +
+          '<div class="chips">' + catChips + '</div></div>' +
+        '<div class="filter-line"><span class="fl-k">地点</span>' +
+          '<div class="chips">' + placeChips + '</div></div>' +
       '</div>' +
       '<div class="list-head">' +
         '<span id="count">加载中…</span>' +
@@ -71,6 +83,7 @@
        看不到自己刚发布的信息。URL 上带参数时以参数为准（方便分享与走查）。 */
     state.type = q.type || 'all';
     state.category = q.category || 'all';
+    state.place = q.place || 'all';
     state.status = q.status || 'active';
     paint(q.fail === '1');
   }
@@ -84,6 +97,7 @@
     S.fetchItems({
       type: state.type,
       category: state.category,
+      place: state.place === 'all' ? '' : state.place,
       status: state.status,
       __fail: !!forceFail
     }, function (res) {

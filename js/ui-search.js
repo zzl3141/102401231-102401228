@@ -85,13 +85,25 @@
   }
 
   function initialState() {
+    var recents = S.recent();
+    var recentBlock = recents.length
+      ? '<div class="row" style="justify-content:space-between">' +
+          '<span class="hot-title">最近搜索</span>' +
+          '<span class="chip" data-sclear="1">清空</span>' +
+        '</div>' +
+        '<div class="chips mt-12">' + recents.map(function (k) {
+          return '<span class="chip" data-skw="' + h.esc(k) + '">' + h.esc(k) + '</span>';
+        }).join('') + '</div>'
+      : '';
+
     return '' +
+      (recentBlock ? '<div class="card">' + recentBlock + '</div>' : '') +
       '<div class="card">' +
         '<div class="hot-title">热门搜索</div>' +
         '<div class="chips mt-12">' + HOT.map(function (k) {
           return '<span class="chip" data-skw="' + h.esc(k) + '">' + h.esc(k) + '</span>';
         }).join('') + '</div>' +
-        '<div class="item-meta">输入物品名称就能查，描述和地点里的字也能匹配到</div>' +
+        '<div class="item-meta">输入物品名称就能查，描述和地点里的字也能匹配到；按回车会把这次搜索记进「最近搜索」</div>' +
       '</div>';
   }
 
@@ -156,6 +168,15 @@
     scheduleRun();
   });
 
+  /* 按回车才记「最近搜索」：边打字边记会把「雨」「雨伞」这种半截词也记进去 */
+  document.addEventListener('keydown', function (e) {
+    if (!e.target || e.target.id !== 'kw') return;
+    if (e.key !== 'Enter') return;
+    if (M.isBlankKeyword(state.kw)) return;
+    S.addRecent(state.kw);
+    run(false);
+  });
+
   document.addEventListener('click', function (e) {
     var t = e.target;
     if (!t || !t.closest) return;
@@ -166,6 +187,13 @@
       var input = document.getElementById('kw');
       if (input) input.value = state.kw;
       syncClear();
+      S.addRecent(state.kw);
+      run(false);
+      return;
+    }
+
+    if (t.closest('[data-sclear]')) {
+      S.clearRecent();
       run(false);
       return;
     }

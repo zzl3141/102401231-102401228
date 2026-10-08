@@ -177,6 +177,21 @@ ul, ol { padding-left: 1.2em; }
   margin: 12px 0 4px;
 }
 
+.filter-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.filter-line .fl-k {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+.filter-line .chips {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .list-head {
   display: flex;
   align-items: center;

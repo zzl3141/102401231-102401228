@@ -126,6 +126,18 @@
       row(item.type === 'found' ? '拾取地点' : '丢失地点', item.place) +
       row('发布时间', M.relativeTime(item.createdAt) || '—');
 
+    /* 附加特点：相关推荐。
+       丢东西的人看招领、捡到东西的人看寻物，光靠搜索很容易漏；
+       这里按「名称有共同词 / 类别相同 / 地点有共同词」推几条对得上的信息。 */
+    var related = closed ? [] : M.relatedItems(S.all(), item);
+    var relatedBlock = related.length
+      ? '<div class="card">' +
+          '<div class="section-title">可能相关的信息</div>' +
+          '<div class="item-meta">同类物品的其他信息，可能有对得上的那一条</div>' +
+          related.map(relRow).join('') +
+        '</div>'
+      : '';
+
     return '' +
       hero + banner +
       '<div class="card">' +
@@ -139,7 +151,20 @@
         '<div class="section-title">特征描述</div>' +
         '<div class="desc-block">' + h.esc(item.desc || '发布者没有填写特征描述') + '</div>' +
       '</div>' +
-      '<div class="card">' + contactHtml(item, mine, closed) + '</div>';
+      '<div class="card">' + contactHtml(item, mine, closed) + '</div>' +
+      relatedBlock;
+  }
+
+  /** 相关推荐里的一行 */
+  function relRow(it) {
+    return '' +
+      '<div class="rel-row" data-nav="/detail/' + h.esc(it.id) + '">' +
+        '<span class="badge ' + (it.type === 'found' ? 'badge-found' : 'badge-lost') + '">' +
+          h.esc(M.typeLabel(it)) + '</span>' +
+        '<span class="rel-title ellipsis">' + h.esc(it.title) + '</span>' +
+        '<span class="rel-meta ellipsis">' + h.esc(it.place) + '</span>' +
+        '<span class="rel-arrow">\u203a</span>' +
+      '</div>';
   }
 
   function actionBarHtml(item, mine, closed) {

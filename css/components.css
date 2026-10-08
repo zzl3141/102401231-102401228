@@ -324,3 +324,19 @@ textarea.input { min-height: 88px; resize: vertical; }
 .mine-actions { display: flex; gap: 8px; margin-top: 10px; }
 .mine-actions .btn { flex: 1 1 0; min-height: 36px; padding: 0 10px; font-size: 13px; }
 .btn-quiet { background: var(--card); color: var(--ink-3); border-color: var(--line); }
+
+/* ---------- 相关推荐 ---------- */
+.rel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.rel-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.rel-row:hover .rel-title { color: var(--brand); }
+.rel-row .rel-title { flex: 0 1 auto; font-weight: 600; color: var(--ink); }
+.rel-row .rel-meta { flex: 1 1 auto; min-width: 0; color: var(--muted); font-size: 12px; }
+.rel-row .rel-arrow { flex: 0 0 auto; color: var(--muted-2); }

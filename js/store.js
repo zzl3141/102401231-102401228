@@ -12,6 +12,7 @@
 
   var KEY_ITEMS = 'laf.items.v1';
   var KEY_MINE = 'laf.mine.v1';
+  var KEY_RECENT = 'laf.recent.v1';
 
   /* ---------------- 内置示例数据 ----------------
      第一次打开时写入，让页面不是空的。清空浏览器数据后会重新写入。 */
@@ -58,6 +59,22 @@
       contactType: 'wechat', contact: 'cardsaver', image: 'img/campus.jpg',
       status: 'closed', closedReason: '已归还', closedAt: 1791072000000,
       createdAt: 1790726400000
+    },
+    /* 下面两条和上面的「蓝牙耳机」「雨伞」正好配得上，
+       用来演示详情页的「可能相关的信息」——丢的人和捡到的人能互相看到。 */
+    {
+      id: 'itm_seed_7', type: 'lost', title: '蓝牙耳机', category: '电子产品',
+      place: '三区食堂二楼', date: '2026-10-04',
+      desc: '白色充电盒，盒盖上有一道划痕，右耳那只不见了，可能吃饭时落在桌上',
+      contactType: 'qq', contact: '22120599', image: '',
+      status: 'active', createdAt: 1790985600000
+    },
+    {
+      id: 'itm_seed_8', type: 'lost', title: '雨伞', category: '雨伞',
+      place: '图书馆二楼阅览室', date: '2026-10-02',
+      desc: '黑色长柄伞，伞柄缠了一圈灰色胶带，昨天下午自习完忘在座位旁边了',
+      contactType: 'wechat', contact: 'umbrella_lost', image: '',
+      status: 'active', createdAt: 1790899200000
     }
   ];
 
@@ -111,6 +128,24 @@
     return writeRaw(KEY_MINE, JSON.stringify(list));
   }
 
+  /** 最近搜索也是一串字符串，和「我的发布」一样单独读写 */
+  function readRecent() {
+    var raw = readRaw(KEY_RECENT);
+    if (!raw) return [];
+    var list;
+    try {
+      list = JSON.parse(raw);
+    } catch (e) {
+      return [];
+    }
+    if (!Array.isArray(list)) return [];
+    return list.filter(function (x) { return typeof x === 'string' && x !== ''; });
+  }
+
+  function writeRecent(list) {
+    return writeRaw(KEY_RECENT, JSON.stringify(Array.isArray(list) ? list : []));
+  }
+
   /* ---------------- 对外接口 ---------------- */
 
   function all() {
@@ -143,6 +178,27 @@
 
   function isMine(id) {
     return readMine().indexOf(id) >= 0;
+  }
+
+  /** 当前数据里真的出现过的地点标签（首页「按地点筛选」用） */
+  function placeTags() {
+    return M.placeTagsOf(readItems());
+  }
+
+  function recent() {
+    return readRecent();
+  }
+
+  /** 记一次搜索关键词（新的排最前，最多留 6 条） */
+  function addRecent(keyword) {
+    var next = M.pushRecent(readRecent(), keyword, 6);
+    writeRecent(next);
+    return next;
+  }
+
+  function clearRecent() {
+    writeRecent([]);
+    return [];
   }
 
   /** 新增一条信息，并记录为本机发布 */
@@ -285,6 +341,7 @@
   root.LFStore = {
     KEY_ITEMS: KEY_ITEMS,
     KEY_MINE: KEY_MINE,
+    KEY_RECENT: KEY_RECENT,
     LOAD_DELAY: LOAD_DELAY,
     all: all,
     get: get,
@@ -292,6 +349,10 @@
     fetchItems: fetchItems,
     fetchItem: fetchItem,
     fetchMine: fetchMine,
+    placeTags: placeTags,
+    recent: recent,
+    addRecent: addRecent,
+    clearRecent: clearRecent,
     mine: mine,
     myIds: myIds,
     isMine: isMine,

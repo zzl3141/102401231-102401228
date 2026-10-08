@@ -25,6 +25,11 @@
   var CATEGORIES = ['证件', '电子产品', '钥匙', '雨伞', '书籍', '其他'];
   var CONTACT_TYPES = { wechat: '微信', qq: 'QQ', phone: '手机号', other: '其他' };
 
+  /* 校园里常去的区域，用来给「按地点筛选」生成标签。
+     标签不是写死的常量列表，而是「这些区域里，哪些在当前数据中真的出现过」，
+     所以数据变了标签也会跟着变，不会出现点了没结果的死标签。 */
+  var PLACE_TAGS = ['一教', '二教', '三区食堂', '图书馆', '紫金楼', '实验楼', '操场'];
+
   var NAME_MIN = 2, NAME_MAX = 20;
   var DESC_MIN = 10, DESC_MAX = 200;
   var PLACE_MIN = 2;
@@ -321,6 +326,93 @@
     return { total: list.length, active: active, closed: closed };
   }
 
+  /* ---------------- 附加特点用的纯函数 ---------------- */
+
+  /** 取出在现有数据里真正出现过的地点标签 */
+  function placeTagsOf(items, tags, limit) {
+    var pool = tags || PLACE_TAGS;
+    var used = {};
+    (items || []).forEach(function (it) {
+      var p = trim(it && it.place);
+      if (!p) return;
+      pool.forEach(function (t) {
+        if (p.indexOf(t) >= 0) used[t] = true;
+      });
+    });
+    var out = pool.filter(function (t) { return used[t]; });
+    return limit ? out.slice(0, limit) : out;
+  }
+
+  /** 切成 2 字片段，用来判断两段中文有没有共同词，例如「蓝牙耳机」与「耳机」 */
+  function bigrams(s) {
+    var t = trim(s).toLowerCase().replace(/\s+/g, '');
+    var out = [];
+    for (var i = 0; i + 1 < t.length; i++) out.push(t.substr(i, 2));
+    if (!out.length && t) out.push(t);
+    return out;
+  }
+
+  function hasOverlap(a, b) {
+    var A = bigrams(a);
+    var B = bigrams(b);
+    for (var i = 0; i < A.length; i++) {
+      if (B.indexOf(A[i]) >= 0) return true;
+    }
+    /* 兜底：单字标题（例如「伞」）切不出 2 字片段，用包含关系再判一次 */
+    var x = trim(a).toLowerCase();
+    var y = trim(b).toLowerCase();
+    if (!x || !y) return false;
+    return x.indexOf(y) >= 0 || y.indexOf(x) >= 0;
+  }
+
+  /**
+   * 相关推荐：寻物信息旁边推可能对应的招领信息，反过来也一样。
+   * 打分规则：物品名称有共同词 +3，类别相同 +2，地点有共同词 +1。
+   * 至少要拿到 2 分才算相关——只靠地点沾一点边（例如都在「二楼」）不算，
+   * 那样会把完全不相关的信息也推出来。
+   */
+  function relatedItems(items, target, limit) {
+    if (!target) return [];
+    var scored = [];
+
+    (items || []).forEach(function (it) {
+      if (!it || it.id === target.id) return;
+      if (it.status === STATUS_CLOSED) return;   /* 已经结束的不再推荐 */
+      if (it.type === target.type) return;       /* 只看另一类：寻物配招领 */
+
+      var score = 0;
+      if (it.title && target.title && hasOverlap(it.title, target.title)) score += 3;
+      if (it.category && it.category === target.category) score += 2;
+      if (it.place && target.place && hasOverlap(it.place, target.place)) score += 1;
+      if (score >= 2) scored.push({ item: it, score: score });
+    });
+
+    scored.sort(function (a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      return (b.item.createdAt || 0) - (a.item.createdAt || 0);
+    });
+
+    return scored.slice(0, limit || 3).map(function (x) { return x.item; });
+  }
+
+  /**
+   * 把一次搜索关键词塞进「最近搜索」：新的排最前、重复的提到最前、最多留 max 条。
+   */
+  function pushRecent(list, keyword, max) {
+    var k = trim(keyword);
+    var top = Math.max(1, max || 5);
+    var out = [];
+
+    if (k) out.push(k);
+    (list || []).forEach(function (x) {
+      var v = trim(x);
+      if (!v || out.indexOf(v) >= 0 || out.length >= top) return;
+      out.push(v);
+    });
+
+    return out.slice(0, top);
+  }
+
   /* ---------------- 序列化 / 脏数据容错 ---------------- */
 
   /**
@@ -388,6 +480,7 @@
     CLOSED_REASON: CLOSED_REASON,
     CATEGORIES: CATEGORIES,
     CONTACT_TYPES: CONTACT_TYPES,
+    PLACE_TAGS: PLACE_TAGS,
     STATUS_ACTIVE: STATUS_ACTIVE,
     STATUS_CLOSED: STATUS_CLOSED,
     NAME_MIN: NAME_MIN,
@@ -416,6 +509,11 @@
     relativeTime: relativeTime,
     contactText: contactText,
     stats: stats,
+    placeTagsOf: placeTagsOf,
+    bigrams: bigrams,
+    hasOverlap: hasOverlap,
+    relatedItems: relatedItems,
+    pushRecent: pushRecent,
 
     normalize: normalize,
     deserialize: deserialize,
