@@ -260,6 +260,28 @@
     }, LOAD_DELAY);
   }
 
+  /** 异步取单条（详情页用），拿不到时 ok 为 true 但 item 为 null */
+  function fetchItem(id, onDone) {
+    root.setTimeout(function () {
+      try {
+        onDone({ ok: true, item: get(id) });
+      } catch (e) {
+        onDone({ ok: false, error: (e && e.message) || '读取失败' });
+      }
+    }, LOAD_DELAY);
+  }
+
+  /** 异步取「我的发布」（我的发布页用） */
+  function fetchMine(onDone) {
+    root.setTimeout(function () {
+      try {
+        onDone({ ok: true, items: mine() });
+      } catch (e) {
+        onDone({ ok: false, error: (e && e.message) || '读取失败' });
+      }
+    }, LOAD_DELAY);
+  }
+
   root.LFStore = {
     KEY_ITEMS: KEY_ITEMS,
     KEY_MINE: KEY_MINE,
@@ -268,6 +290,8 @@
     get: get,
     query: query,
     fetchItems: fetchItems,
+    fetchItem: fetchItem,
+    fetchMine: fetchMine,
     mine: mine,
     myIds: myIds,
     isMine: isMine,

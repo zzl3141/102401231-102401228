@@ -141,6 +141,104 @@
     }, ms || 1800);
   }
 
+  /** 二次确认对话框。删除、标记状态这类不可逆动作前都要过一遍 */
+  function confirmDialog(opts) {
+    opts = opts || {};
+    var mask = document.createElement('div');
+    mask.className = 'mask';
+    mask.innerHTML = '' +
+      '<div class="dlg" role="dialog">' +
+        '<div class="dlg-t">' + esc(opts.title || '确认操作') + '</div>' +
+        (opts.sub ? '<div class="dlg-s">' + esc(opts.sub) + '</div>' : '') +
+        '<div class="acts">' +
+          '<div class="dlg-cancel">' + esc(opts.cancelText || '取消') + '</div>' +
+          '<div class="dlg-ok">' + esc(opts.okText || '确认') + '</div>' +
+        '</div>' +
+      '</div>';
+
+    function close() {
+      if (mask.parentNode) mask.parentNode.removeChild(mask);
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close();
+    }
+
+    mask.querySelector('.dlg-cancel').addEventListener('click', close);
+    mask.querySelector('.dlg-ok').addEventListener('click', function () {
+      close();
+      if (typeof opts.onOk === 'function') opts.onOk();
+    });
+    mask.addEventListener('click', function (e) {
+      if (e.target === mask) close();
+    });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(mask);
+    return { close: close };
+  }
+
+  /**
+   * 复制文本。优先用 Clipboard API，不可用时退回 execCommand
+   * （file:// 打开时 Clipboard API 有可能被拒，所以必须有退路）。
+   */
+  function copyText(text, onDone) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', 'readonly');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      var ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch (e) {
+        ok = false;
+      }
+      document.body.removeChild(ta);
+      onDone(ok);
+    }
+
+    var nav = root.navigator;
+    if (nav && nav.clipboard && nav.clipboard.writeText) {
+      nav.clipboard.writeText(text).then(function () { onDone(true); }, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  /** 把图片文件缩放后转成 base64，避免 localStorage 被原图撑爆 */
+  function readImageFile(file, onDone) {
+    var MAX_W = 800;
+    var reader = new root.FileReader();
+    reader.onload = function () {
+      var img = new root.Image();
+      img.onload = function () {
+        var scale = Math.min(1, MAX_W / img.width);
+        var w = Math.round(img.width * scale);
+        var h = Math.round(img.height * scale);
+        var canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        var out = '';
+        try {
+          out = canvas.toDataURL('image/jpeg', 0.82);
+        } catch (e) {
+          out = '';
+        }
+        onDone(out || String(reader.result || ''));
+      };
+      img.onerror = function () { onDone(''); };
+      img.src = String(reader.result || '');
+    };
+    reader.onerror = function () { onDone(''); };
+    reader.readAsDataURL(file);
+  }
+
   UI.h = {
     esc: esc,
     host: host,
@@ -152,6 +250,9 @@
     loadFailed: loadFailed,
     itemCard: itemCard,
     stageNote: stageNote,
-    toast: toast
+    toast: toast,
+    confirmDialog: confirmDialog,
+    copyText: copyText,
+    readImageFile: readImageFile
   };
 })(window);
