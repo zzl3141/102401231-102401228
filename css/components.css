@@ -188,6 +188,13 @@ textarea.input { min-height: 88px; resize: vertical; }
   100% { background-position: 0 50%; }
 }
 
+/* 用户在系统里开了「减弱动态效果」时，停掉骨架屏的流动动画，
+   避免对光敏感或容易晕动的人不舒服。 */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; background: var(--bg-2); }
+  .item-card, .btn { transition: none; }
+}
+
 /* ---------- 提示条 / 对话框 ---------- */
 .toast {
   position: fixed;
@@ -201,6 +208,12 @@ textarea.input { min-height: 88px; resize: vertical; }
   color: #fff;
   font-size: 13px;
   white-space: nowrap;
+  animation: toast-in .18s ease-out;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
 .mask {
@@ -305,8 +318,10 @@ textarea.input { min-height: 88px; resize: vertical; }
   background: rgba(255, 255, 255, .96);
   border-top: 1px solid var(--line-2);
   backdrop-filter: blur(8px);
+  /* 刘海屏 / 底部手势条：给按钮多留一点空间，别被 Home 指示条挡住 */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
-.app-body.pb-action { padding-bottom: 78px; }
+.app-body.pb-action { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
 
 /* ---------- 发布 / 编辑页 ---------- */
 .img-pick { display: flex; align-items: center; gap: 12px; }
@@ -366,3 +381,9 @@ textarea.input { min-height: 88px; resize: vertical; }
 .seg > *:active { opacity: .7; }
 .nav-back:active { background: var(--bg-2); }
 .rel-row:active { background: var(--bg-2); }
+
+/* 键盘导航时给可点元素一个清晰的焦点圈，方便不用鼠标的用户 */
+.btn:focus-visible, .tab:focus-visible, .nav-back:focus-visible {
+  outline: 2px solid var(--brand-mid);
+  outline-offset: 2px;
+}
