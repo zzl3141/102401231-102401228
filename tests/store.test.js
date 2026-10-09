@@ -160,6 +160,57 @@ describe('修改与状态流转', () => {
 
 /* ==================================================================== */
 
+/* 「我的发布」里的删除功能（结对同学在 PR #1 里加的）用到了 store.remove，
+   合并时发现这个函数还没有测试覆盖，补上。 */
+describe('删除信息', () => {
+  it('remove 之后：列表里没有了，按 id 也查不到', () => {
+    S.seedIfEmpty();
+    const id = 'itm_seed_3';
+    assert.ok(S.get(id), '删之前应该能取到');
+
+    S.remove(id);
+
+    assert.equal(S.get(id), null);
+    assert.equal(S.query({ status: 'all' }).some(x => x.id === id), false);
+    assert.equal(S.all().length, 7);
+  });
+
+  it('remove 同时把自己发布的那条从「我的发布」里摘掉', () => {
+    S.seedIfEmpty();
+    const id = 'itm_seed_3';
+    assert.equal(S.isMine(id), true);
+
+    S.remove(id);
+
+    assert.equal(S.isMine(id), false);
+    assert.equal(S.myIds().indexOf(id), -1);
+    assert.equal(S.mine().some(x => x.id === id), false);
+  });
+
+  it('删掉自己新发布的那条也不会残留', () => {
+    S.seedIfEmpty();
+    const created = S.create(newForm());
+    assert.ok(S.mine().some(x => x.id === created.id));
+
+    S.remove(created.id);
+
+    assert.equal(S.get(created.id), null);
+    assert.equal(S.mine().some(x => x.id === created.id), false);
+  });
+
+  it('remove 不存在的 id：不报错，其他数据不受影响', () => {
+    S.seedIfEmpty();
+    const before = S.all().length;
+
+    S.remove('不存在的信息');
+
+    assert.equal(S.all().length, before);
+    assert.equal(S.myIds().length, 2);
+  });
+});
+
+/* ==================================================================== */
+
 describe('最近搜索', () => {
   it('一开始是空的', () => {
     assert.deepEqual(S.recent(), []);
