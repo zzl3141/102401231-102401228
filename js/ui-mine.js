@@ -71,6 +71,7 @@
         '<div class="mine-actions">' +
           mainAction +
           '<button class="btn btn-quiet" data-mact="edit" data-id="' + h.esc(item.id) + '">编辑</button>' +
+          '<button class="btn btn-quiet btn-danger" data-mact="remove" data-id="' + h.esc(item.id) + '">删除</button>' +
         '</div>' +
       '</div>';
   }
@@ -131,6 +132,21 @@
     });
   }
 
+  function confirmRemove(id) {
+    var item = findItem(id);
+    if (!item) return;
+    h.confirmDialog({
+      title: '确认删除「' + item.title + '」？',
+      sub: '删除后这条信息会从列表和「我的发布」里消失，无法恢复。',
+      okText: '删除',
+      onOk: function () {
+        S.remove(id);
+        h.toast('已删除');
+        load();
+      }
+    });
+  }
+
   document.addEventListener('click', function (e) {
     var t = e.target;
     if (!t || !t.closest) return;
@@ -141,6 +157,7 @@
       var act = el.getAttribute('data-mact');
       if (act === 'close') { confirmClose(id); return; }
       if (act === 'reopen') { confirmReopen(id); return; }
+      if (act === 'remove') { confirmRemove(id); return; }
       if (act === 'edit') {
         root.LFRouter.navigate('/publish?id=' + encodeURIComponent(id));
         return;
